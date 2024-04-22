@@ -3,7 +3,4 @@ module.exports = {
   watch: true,
   script: "bun run start",
   ignore_watch: ["node_modules", "dist", "logs", "public"],
-  interpreter: "bun",
-  exec_mode: "cluster",
-  instances: "max",
 };
