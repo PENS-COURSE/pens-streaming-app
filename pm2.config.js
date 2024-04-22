@@ -1,7 +1,7 @@
 module.exports = {
   name: "online-classroom-pens-streaming-v1",
   watch: true,
-  script: "./dist/src/main.js",
+  script: "bun run start",
   ignore_watch: ["node_modules", "dist", "logs", "public"],
   interpreter: "bun",
   exec_mode: "cluster",
