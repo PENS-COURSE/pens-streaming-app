@@ -1,5 +1,5 @@
 export interface Streaming {
-  auth_token?: string;
+  moderator?: string;
   room_token?: string;
   expired_at?: Date;
 }

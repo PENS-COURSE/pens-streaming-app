@@ -30,6 +30,7 @@ export default function Home() {
     [roomSignature]
   );
 
+  const moderator = useMemo(() => streaming?.moderator, [streaming]);
   const slug = useMemo(() => roomSignature?.video.room, [roomSignature]);
   const participantName = useMemo(() => roomSignature?.sub, [roomSignature]);
 
@@ -126,7 +127,7 @@ export default function Home() {
             {isRoomAdmin ? (
               <HostPlayer roomSlug={slug} />
             ) : (
-              <ViewerPlayer roomSlug={slug} />
+              <ViewerPlayer moderator={moderator} />
             )}
             <div className="mt-6">
               <h1 className="font-semibold text-2xl">Konsep Pemrograman</h1>

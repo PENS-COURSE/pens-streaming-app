@@ -14,9 +14,9 @@ import {
 } from "livekit-client";
 import React, { useEffect, useMemo } from "react";
 
-const ViewerPlayer = ({ roomSlug }: { roomSlug: string }) => {
+const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
   const stateConnection = useConnectionState();
-  const participants = useRemoteParticipant("Admin Online Classroom PENS", {
+  const participants = useRemoteParticipant(moderator ?? "", {
     updateOnlyOn: Object.values(ParticipantEvent),
   });
 
