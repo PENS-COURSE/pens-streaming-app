@@ -1,0 +1,313 @@
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  LocalTrack,
+  createLocalVideoTrack,
+  createLocalAudioTrack,
+  Track,
+} from "livekit-client";
+import {
+  MediaDeviceMenu,
+  useLiveKitRoom,
+  useLocalParticipant,
+  useParticipantInfo,
+} from "@livekit/components-react";
+import ButtonToggle from "./ButtonToggle";
+import clsx from "clsx";
+import {
+  IconCamera,
+  IconCameraOff,
+  IconCirclePlay,
+  IconCircleStop,
+  IconMic,
+  IconMicOff,
+  IconRecord,
+} from "@irsyadadl/paranoid";
+import {
+  startRecordStreaming,
+  stopRecordStreaming,
+} from "../actions/streaming";
+
+const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
+  const [isStreaming, setIsStreaming] = useState<boolean>(false);
+  const [videoTrack, setVideoTrack] = useState<LocalTrack>();
+  const [audioTrack, setAudioTrack] = useState<LocalTrack>();
+  const [screenTrack, setScreenTrack] = useState<LocalTrack[]>();
+  const [isCameraOn, setIsCameraOn] = useState<boolean>(false);
+  const [isMicrophoneOn, setIsMicrophoneOn] = useState<boolean>(false);
+  const [isScreenSharing, setIsScreenSharing] = useState<boolean>(false);
+  const [isRecording, setIsRecording] = useState({
+    path: null,
+    isRecording: false,
+    isLoading: false,
+  });
+
+  const { localParticipant } = useLocalParticipant();
+
+  const previewVideoEl = useRef<HTMLVideoElement>(null);
+  const shareScreenEl = useRef<HTMLVideoElement>(null);
+
+  const toggleStreaming = useCallback(() => {
+    if (isStreaming && localParticipant) {
+      if (videoTrack) {
+        void localParticipant.unpublishTrack(videoTrack);
+      }
+      if (audioTrack) {
+        void localParticipant.unpublishTrack(audioTrack);
+      }
+      if (screenTrack) {
+        screenTrack.forEach((track) => {
+          void localParticipant.unpublishTrack(track);
+        });
+      }
+    } else {
+      if (videoTrack) {
+        void localParticipant?.publishTrack(videoTrack);
+      }
+      if (audioTrack) {
+        void localParticipant?.publishTrack(audioTrack);
+      }
+      if (screenTrack) {
+        screenTrack.forEach((track) => {
+          void localParticipant?.publishTrack(track);
+        });
+      }
+    }
+
+    setIsStreaming(!isStreaming);
+  }, [isStreaming, localParticipant, videoTrack, audioTrack, screenTrack]);
+
+  const toggleCamera = useCallback(async () => {
+    if (isCameraOn) {
+      videoTrack?.stop();
+      if (videoTrack) {
+        void localParticipant.unpublishTrack(videoTrack);
+      }
+      setVideoTrack(undefined);
+    } else {
+      const tracks = await createLocalVideoTrack({});
+      setVideoTrack(tracks);
+      void localParticipant?.publishTrack(tracks);
+
+      if (previewVideoEl.current) {
+        tracks.attach(previewVideoEl.current);
+      }
+    }
+
+    localParticipant?.setCameraEnabled(!isCameraOn);
+    setIsCameraOn(!isCameraOn);
+  }, [isCameraOn, videoTrack, localParticipant]);
+
+  const toggleMicrophone = useCallback(async () => {
+    if (isMicrophoneOn) {
+      audioTrack?.stop();
+      if (audioTrack) {
+        void localParticipant?.unpublishTrack(audioTrack);
+      }
+      setAudioTrack(undefined);
+    } else {
+      const tracks = await createLocalAudioTrack({
+        channelCount: 2,
+        echoCancellation: false,
+        noiseSuppression: false,
+      });
+      setAudioTrack(tracks);
+      void localParticipant?.publishTrack(tracks, {
+        source: Track.Source.Microphone,
+      });
+
+      if (previewVideoEl.current) {
+        tracks.attach(previewVideoEl.current);
+      }
+    }
+
+    localParticipant?.setMicrophoneEnabled(!isMicrophoneOn);
+    setIsMicrophoneOn(!isMicrophoneOn);
+  }, [isMicrophoneOn, audioTrack, localParticipant]);
+
+  const toggleShareScreen = useCallback(async () => {
+    if (isScreenSharing) {
+      localParticipant?.setScreenShareEnabled(false);
+      setScreenTrack(undefined);
+      if (shareScreenEl.current) {
+        const mediaStream = shareScreenEl.current?.srcObject as MediaStream;
+
+        mediaStream.getTracks().forEach((track) => {
+          track.stop();
+          mediaStream.removeTrack(track);
+        });
+      }
+    } else {
+      const tracks = await localParticipant?.createScreenTracks({
+        audio: true,
+      });
+      setScreenTrack(tracks);
+
+      if (shareScreenEl.current) {
+        tracks
+          ?.filter(
+            (track) =>
+              track.source === Track.Source.ScreenShare ||
+              Track.Source.ScreenShareAudio
+          )
+          .forEach((track) => {
+            if (shareScreenEl.current) {
+              track.on("ended", () => {
+                localParticipant?.setScreenShareEnabled(false);
+                void localParticipant.unpublishTrack(track);
+                setIsScreenSharing(false);
+              });
+
+              void localParticipant?.publishTrack(track);
+              track.attach(shareScreenEl.current);
+            }
+          });
+      }
+    }
+
+    setIsScreenSharing(!isScreenSharing);
+  }, [isScreenSharing, localParticipant]);
+
+  const handleRecording = useCallback(async () => {
+    try {
+      console.log("isRecording :", isRecording);
+      setIsRecording({ ...isRecording, isLoading: true });
+
+      if (isRecording.isRecording) {
+        const data = await stopRecordStreaming({
+          slug: roomSlug,
+        });
+
+        if (data) {
+          console.log("data record :", data);
+          console.log("Recording stopped");
+          setIsRecording({
+            ...isRecording,
+            isRecording: false,
+            isLoading: false,
+            path: data.data.path,
+          });
+        }
+      } else {
+        const data = await startRecordStreaming({
+          slug: roomSlug,
+        });
+
+        if (data) {
+          console.log("data record :", data);
+          console.log("Recording started");
+          setIsRecording({
+            ...isRecording,
+            isRecording: true,
+            isLoading: false,
+          });
+        }
+      }
+    } catch (error) {
+      setIsRecording({
+        ...isRecording,
+        isRecording: false,
+      });
+
+      console.error(error);
+    }
+
+    console.log("isRecording :", isRecording);
+  }, [isRecording, roomSlug]);
+
+  return (
+    <>
+      <div className="aspect-video w-full h-auto mt-10 rounded overflow-hidden relative">
+        <div className="">
+          <video
+            className={clsx("object-cover w-full h-full", {
+              hidden: !isScreenSharing,
+            })}
+            ref={shareScreenEl}
+          ></video>
+          <video
+            className={clsx(
+              "object-cover absolute transition-all w-full duration-500 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 video__camera",
+              isScreenSharing
+                ? "z-10 aspect-video !w-60 rounded-md !right-10 !bottom-10 translate-x-1/3 translate-y-1/3 xl:!translate-x-full xl:!translate-y-full"
+                : "video__camera--full",
+              {
+                hidden: !isCameraOn,
+              }
+            )}
+            ref={previewVideoEl}
+          ></video>
+        </div>
+        {!videoTrack && (
+          <div className="w-full h-full flex items-center justify-center bg-black">
+            <h1 className="text-white text-center">
+              Kamera belum dinyalakan, silahkan nyalakan kamera terlebih dahulu
+            </h1>
+          </div>
+        )}
+      </div>
+      <div className="my-5">
+        <div className="flex items-center gap-3">
+          <ButtonToggle
+            value={isStreaming}
+            onClick={toggleStreaming}
+            className="flex items-center gap-x-2"
+          >
+            {isStreaming ? <IconCircleStop /> : <IconCirclePlay />}
+            {isStreaming ? "Matikan Streaming" : "Mulai Streaming"}
+          </ButtonToggle>
+          <ButtonToggle
+            value={isScreenSharing}
+            onClick={toggleShareScreen}
+            className="flex items-center gap-x-2"
+          >
+            {isScreenSharing ? <IconCamera /> : <IconCameraOff />}
+            {isScreenSharing ? "Matikan Share Screen" : "Share Screen"}
+          </ButtonToggle>
+          <ButtonToggle
+            value={isCameraOn}
+            onClick={toggleCamera}
+            className="flex items-center gap-x-2"
+          >
+            {isCameraOn ? <IconCamera /> : <IconCameraOff />}
+            {isCameraOn ? "Matikan Kamera" : "Nyalakan Kamera"}
+          </ButtonToggle>
+          <ButtonToggle
+            value={isMicrophoneOn}
+            onClick={toggleMicrophone}
+            className="flex items-center gap-x-2"
+          >
+            {isMicrophoneOn ? <IconMic /> : <IconMicOff />}
+            {isMicrophoneOn ? "Matikan Mic" : "Nyalakan Mic"}
+          </ButtonToggle>
+          <ButtonToggle
+            value={isRecording.isRecording}
+            onClick={handleRecording}
+            className="flex items-center gap-x-2"
+            disabled={isRecording.isLoading}
+          >
+            {isRecording.isRecording ? <IconCircleStop /> : <IconRecord />}
+            {isRecording.isRecording ? "Hentikan Rekam" : "Rekam Sesi"}
+          </ButtonToggle>
+        </div>
+      </div>
+
+      <MediaDeviceMenu />
+
+      {isRecording.path && (
+        <div className="flex items-center gap-2">
+          <p>Lihat Hasil Rekaman :</p>
+          <a
+            href={`http://localhost:5000/${isRecording.path}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-blue-400 hover:text-blue-600 transition-colors duration-300"
+          >
+            Download Rekaman
+          </a>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default HostPlayer;

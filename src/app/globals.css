@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.video__camera {
+  transition: transform 0.5s 1s, right 0.5s 0.5s, width 0.5s 0.5s;
+}
+
+.video__camera--full {
+  transition: transform 0.5s, width 0.5s 0.5s !important;
+}
