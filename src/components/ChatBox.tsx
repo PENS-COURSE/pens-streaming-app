@@ -55,7 +55,7 @@ const ChatBox = ({ participantName }: { participantName: string }) => {
           value={message}
           onChange={handleChangeMessage}
           onKeyDown={onEnter}
-          className="input-block input bg-transparent border border-gray-300 mt-4 text-black"
+          className="input input-bordered bg-transparent border-gray-300 mt-4 text-black w-full"
           placeholder="Masukan pesan kamu disini ..."
         />
         <button onClick={onSend} disabled={message.trim().length === 0}>

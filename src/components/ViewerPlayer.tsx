@@ -121,6 +121,7 @@ const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
               hidden: !isShareScreen,
             })}
             ref={shareScreenEl}
+            muted={false}
             autoPlay
           ></video>
           <video
@@ -133,10 +134,10 @@ const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
                 hidden: !isCameraEnabled,
               }
             )}
+            muted={false}
             ref={videoEl}
             autoPlay
           ></video>
-          <RoomAudioRenderer muted={false} />
         </div>
       </div>
     </>

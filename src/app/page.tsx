@@ -14,9 +14,9 @@ import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
 import { LiveKitRoom } from "@livekit/components-react";
-import HostPlayer from "../components/HostPlayer";
 import ViewerPlayer from "../components/ViewerPlayer";
 import ChatBox from "../components/ChatBox";
+import HostPlayer from "../components/HostPlayer";
 
 export default function Home() {
   const [streaming, setStreaming] = useState<Streaming | null>(null);
@@ -116,11 +116,6 @@ export default function Home() {
       <LiveKitRoom
         token={streaming?.room_token}
         serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_SERVER_URL}
-        options={{
-          publishDefaults: {
-            red: false,
-          },
-        }}
       >
         <section className="grid grid-cols-3 text-black mt-5 pb-16 container mx-auto">
           <div className="col-span-2">

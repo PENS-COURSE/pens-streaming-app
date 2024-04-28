@@ -11,16 +11,16 @@ const Navbar = () => {
             <Image src="/PENS.png" alt="logo" width="50" height="50" />
           </a>
         </div>
-        <div className="navbar-center">
-          <a className="navbar-item font-medium">Beranda</a>
-          <a className="navbar-item font-medium">Jurusan</a>
-          <a className="navbar-item font-medium">Dashboard</a>
+        <div className="navbar-center text-white gap-5">
+          <a className="font-medium">Beranda</a>
+          <a className="font-medium">Jurusan</a>
+          <a className="font-medium">Dashboard</a>
         </div>
         <div className="navbar-end">
-          <BellIcon className="navbar-item size-12 mr-2" />
-          <div className="flex items-center gap-x-2">
+          <BellIcon className="size-6 mr-3 text-white" />
+          <div className="flex items-center gap-x-5">
             <Image src="/profile.png" alt="profile" width="40" height="40" />
-            <a className="navbar-item">Bintang Rezeka Ramadani</a>
+            <a className="text-white">Bintang Rezeka Ramadani</a>
           </div>
         </div>
       </div>
