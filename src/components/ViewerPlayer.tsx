@@ -9,16 +9,16 @@ import clsx from "clsx";
 import {
   ConnectionState,
   Track,
-  ParticipantEvent,
+  RoomEvent,
   ConnectionQuality,
 } from "livekit-client";
 import React, { useEffect, useMemo } from "react";
 
 const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
   const stateConnection = useConnectionState();
-  const participants = useRemoteParticipant(moderator ?? "", {
-    updateOnlyOn: Object.values(ParticipantEvent),
-  });
+  const participants = useRemoteParticipants({
+    updateOnlyOn: Object.values(RoomEvent),
+  }).filter((p) => p.permissions?.canPublishSources)[0];
 
   const videoEl = React.useRef<HTMLVideoElement>(null);
   const shareScreenEl = React.useRef<HTMLVideoElement>(null);
@@ -41,6 +41,7 @@ const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
         case Track.Source.ScreenShare || Track.Source.ScreenShareAudio:
           if (shareScreenEl.current) {
             track.publication.track?.attach(shareScreenEl.current);
+            shareScreenEl.current.muted = false;
           }
           break;
       }
@@ -121,7 +122,6 @@ const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
               hidden: !isShareScreen,
             })}
             ref={shareScreenEl}
-            muted={false}
             autoPlay
           ></video>
           <video
@@ -134,10 +134,10 @@ const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
                 hidden: !isCameraEnabled,
               }
             )}
-            muted={false}
             ref={videoEl}
             autoPlay
           ></video>
+          <RoomAudioRenderer />
         </div>
       </div>
     </>

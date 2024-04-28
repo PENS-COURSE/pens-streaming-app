@@ -359,7 +359,7 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
         )}
       </div>
       <div className="my-5">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center flex-wrap w-auto gap-3">
           <ButtonToggle
             value={isStreaming}
             onClick={toggleStreaming}
