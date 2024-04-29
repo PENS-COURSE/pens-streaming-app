@@ -7,7 +7,7 @@ import { joinStreaming } from "../actions/streaming";
 import ChatMessage from "../components/ChatMessage";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Streaming } from "../types/Streaming";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -43,27 +43,30 @@ export default function Home() {
 
   useEffect(() => {
     if (signed) {
-      joinStreaming({ signed })
-        .then((res) => {
-          setStreaming(res.data ?? null);
-          setRoomSignature(jwtDecode(res.data?.room_token ?? ""));
-          setIdentity(participantName);
-        })
-        .catch((err) => {
-          const { message, status } = JSON.parse(err.message);
-          if (status === 404) {
-            setIsNotFound(true);
-          } else if (status === 403) {
-            setIsForbidden(true);
-          } else {
-            toast.error(message);
-          }
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+      if (!roomSignature) {
+        joinStreaming({ signed })
+          .then((res) => {
+            console.log("OK");
+            setStreaming(res.data ?? null);
+            setRoomSignature(jwtDecode(res.data?.room_token ?? ""));
+            setIdentity(jwtDecode(res.data?.room_token ?? "").sub ?? "Guest");
+          })
+          .catch((err) => {
+            const { message, status } = JSON.parse(err.message);
+            if (status === 404) {
+              setIsNotFound(true);
+            } else if (status === 403) {
+              setIsForbidden(true);
+            } else {
+              toast.error(message);
+            }
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+      }
     }
-  }, [participantName, setIdentity, signed]);
+  }, [roomSignature, setIdentity, signed]);
 
   if (!signed) {
     return (
