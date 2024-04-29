@@ -161,9 +161,6 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
       setAudioTrack(undefined);
     } else {
       const tracks = await createLocalAudioTrack({
-        channelCount: 2,
-        echoCancellation: false,
-        noiseSuppression: false,
         deviceId: activeAudioInputDeviceId,
       });
       setAudioTrack(tracks);
