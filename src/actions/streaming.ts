@@ -9,7 +9,7 @@ export async function joinStreaming({
   signed: string;
 }): Promise<APIResponse<Streaming>> {
   const res = await fetch(
-    `https://pens-api-staging.superrexy-dev.my.id/api/streaming/${signed}`,
+    `${process.env.NEXT_PUBLIC_PENS_STREAMING_API}/api/streaming/${signed}`,
     {
       method: "GET",
     }
@@ -36,7 +36,7 @@ export async function startRecordStreaming({
   slug: string;
 }): Promise<APIResponse<any>> {
   const res = await fetch(
-    `https://pens-api-staging.superrexy-dev.my.id/api/streaming/record/start-record/${slug}`,
+    `${process.env.NEXT_PUBLIC_PENS_STREAMING_API}/api/streaming/record/start-record/${slug}`,
     {
       method: "GET",
       headers: {
@@ -66,7 +66,7 @@ export async function stopRecordStreaming({
   slug: string;
 }): Promise<APIResponse<any>> {
   const res = await fetch(
-    `https://pens-api-staging.superrexy-dev.my.id/api/streaming/record/stop-record/${slug}`,
+    `${process.env.NEXT_PUBLIC_PENS_STREAMING_API}/api/streaming/record/stop-record/${slug}`,
     {
       method: "GET",
       headers: {
@@ -96,7 +96,7 @@ export async function getIsRecording({
   slug: string;
 }): Promise<APIResponse<any>> {
   const res = await fetch(
-    `https://pens-api-staging.superrexy-dev.my.id/api/streaming/record/${slug}`,
+    `${process.env.NEXT_PUBLIC_PENS_STREAMING_API}/api/streaming/record/${slug}`,
     {
       method: "GET",
       headers: {

@@ -7,18 +7,21 @@ import { joinStreaming } from "../actions/streaming";
 import ChatMessage from "../components/ChatMessage";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Streaming } from "../types/Streaming";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import { jwtDecode } from "jwt-decode";
 import { LiveKitRoom } from "@livekit/components-react";
-import HostPlayer from "../components/HostPlayer";
 import ViewerPlayer from "../components/ViewerPlayer";
 import ChatBox from "../components/ChatBox";
+import HostPlayer from "../components/HostPlayer";
+import { NavbarContext } from "../contexts/navbarContext";
 
 export default function Home() {
+  // Context
+  const { setIdentity } = useContext(NavbarContext);
   const [streaming, setStreaming] = useState<Streaming | null>(null);
   const [roomSignature, setRoomSignature] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -44,6 +47,7 @@ export default function Home() {
         .then((res) => {
           setStreaming(res.data ?? null);
           setRoomSignature(jwtDecode(res.data?.room_token ?? ""));
+          setIdentity(participantName);
         })
         .catch((err) => {
           const { message, status } = JSON.parse(err.message);
@@ -59,7 +63,7 @@ export default function Home() {
           setIsLoading(false);
         });
     }
-  }, [signed]);
+  }, [participantName, setIdentity, signed]);
 
   if (!signed) {
     return (
@@ -116,11 +120,6 @@ export default function Home() {
       <LiveKitRoom
         token={streaming?.room_token}
         serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_SERVER_URL}
-        options={{
-          publishDefaults: {
-            red: false,
-          },
-        }}
       >
         <section className="grid grid-cols-3 text-black mt-5 pb-16 container mx-auto">
           <div className="col-span-2">

@@ -1,31 +1,32 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  LocalTrack,
-  createLocalVideoTrack,
-  createLocalAudioTrack,
-  Track,
-} from "livekit-client";
-import {
-  MediaDeviceMenu,
-  useLiveKitRoom,
-  useLocalParticipant,
-  useParticipantInfo,
-} from "@livekit/components-react";
-import ButtonToggle from "./ButtonToggle";
-import clsx from "clsx";
 import {
   IconCamera,
   IconCameraOff,
   IconCirclePlay,
   IconCircleStop,
+  IconGear,
   IconMic,
   IconMicOff,
   IconRecord,
 } from "@irsyadadl/paranoid";
 import {
+  useLocalParticipant,
+  useMediaDeviceSelect,
+} from "@livekit/components-react";
+import clsx from "clsx";
+import {
+  createLocalAudioTrack,
+  createLocalVideoTrack,
+  LocalTrack,
+  Track,
+} from "livekit-client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import {
   startRecordStreaming,
   stopRecordStreaming,
 } from "../actions/streaming";
+import ButtonToggle from "./ButtonToggle";
+import StreamingOptions from "./StreamingOptions";
 
 const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
@@ -40,6 +41,48 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
     isRecording: false,
     isLoading: false,
   });
+
+  const [deviceList, setDeviceList] = useState<
+    Record<"audioinput" | "audiooutput" | "videoinput", MediaDeviceInfo[]>
+  >({
+    audioinput: [],
+    audiooutput: [],
+    videoinput: [],
+  });
+
+  const [device, setDevice] = useState<
+    Record<"audioinput" | "audiooutput" | "videoinput", MediaDeviceInfo | null>
+  >({
+    audioinput: null,
+    audiooutput: null,
+    videoinput: null,
+  });
+
+  const {
+    devices: audioOutputDevices,
+    activeDeviceId: activeAudioOutputDeviceId,
+    setActiveMediaDevice: setActiveAudioOutputDevice,
+  } = useMediaDeviceSelect({
+    kind: "audiooutput",
+  });
+
+  const {
+    devices: audioInputDevices,
+    activeDeviceId: activeAudioInputDeviceId,
+    setActiveMediaDevice: setActiveAudioInputDevice,
+  } = useMediaDeviceSelect({
+    kind: "audioinput",
+  });
+
+  const {
+    devices: videoInputDevices,
+    activeDeviceId: activeVideoInputDeviceId,
+    setActiveMediaDevice: setActiveVideoInputDevice,
+  } = useMediaDeviceSelect({
+    kind: "videoinput",
+  });
+
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const { localParticipant } = useLocalParticipant();
 
@@ -63,9 +106,11 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
       if (videoTrack) {
         void localParticipant?.publishTrack(videoTrack);
       }
+
       if (audioTrack) {
         void localParticipant?.publishTrack(audioTrack);
       }
+
       if (screenTrack) {
         screenTrack.forEach((track) => {
           void localParticipant?.publishTrack(track);
@@ -79,28 +124,38 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
   const toggleCamera = useCallback(async () => {
     if (isCameraOn) {
       videoTrack?.stop();
-      if (videoTrack) {
+      if (videoTrack && isStreaming) {
         void localParticipant.unpublishTrack(videoTrack);
       }
       setVideoTrack(undefined);
     } else {
-      const tracks = await createLocalVideoTrack({});
+      const tracks = await createLocalVideoTrack({
+        deviceId: activeVideoInputDeviceId,
+      });
       setVideoTrack(tracks);
-      void localParticipant?.publishTrack(tracks);
+      if (isStreaming) {
+        void localParticipant?.publishTrack(tracks);
+      }
 
       if (previewVideoEl.current) {
         tracks.attach(previewVideoEl.current);
       }
     }
 
-    localParticipant?.setCameraEnabled(!isCameraOn);
+    if (isStreaming) localParticipant?.setCameraEnabled(!isCameraOn);
     setIsCameraOn(!isCameraOn);
-  }, [isCameraOn, videoTrack, localParticipant]);
+  }, [
+    isCameraOn,
+    isStreaming,
+    localParticipant,
+    videoTrack,
+    activeVideoInputDeviceId,
+  ]);
 
   const toggleMicrophone = useCallback(async () => {
     if (isMicrophoneOn) {
       audioTrack?.stop();
-      if (audioTrack) {
+      if (audioTrack && isStreaming) {
         void localParticipant?.unpublishTrack(audioTrack);
       }
       setAudioTrack(undefined);
@@ -109,24 +164,29 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
         channelCount: 2,
         echoCancellation: false,
         noiseSuppression: false,
+        deviceId: activeAudioInputDeviceId,
       });
       setAudioTrack(tracks);
-      void localParticipant?.publishTrack(tracks, {
-        source: Track.Source.Microphone,
-      });
 
-      if (previewVideoEl.current) {
-        tracks.attach(previewVideoEl.current);
+      if (isStreaming) {
+        void localParticipant?.publishTrack(tracks);
       }
     }
 
-    localParticipant?.setMicrophoneEnabled(!isMicrophoneOn);
+    if (isStreaming) localParticipant?.setMicrophoneEnabled(!isMicrophoneOn);
     setIsMicrophoneOn(!isMicrophoneOn);
-  }, [isMicrophoneOn, audioTrack, localParticipant]);
+  }, [
+    isMicrophoneOn,
+    isStreaming,
+    localParticipant,
+    audioTrack,
+    activeAudioInputDeviceId,
+  ]);
 
   const toggleShareScreen = useCallback(async () => {
     if (isScreenSharing) {
       localParticipant?.setScreenShareEnabled(false);
+
       setScreenTrack(undefined);
       if (shareScreenEl.current) {
         const mediaStream = shareScreenEl.current?.srcObject as MediaStream;
@@ -214,6 +274,54 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
     console.log("isRecording :", isRecording);
   }, [isRecording, roomSlug]);
 
+  const gotDevices = useCallback(async () => {
+    setDeviceList({
+      audioinput: audioInputDevices,
+      audiooutput: audioOutputDevices,
+      videoinput: videoInputDevices,
+    });
+  }, [audioInputDevices, audioOutputDevices, videoInputDevices]);
+
+  const handleDeviceChange = useCallback(
+    async (
+      kind: "audioinput" | "audiooutput" | "videoinput",
+      deviceId: string
+    ) => {
+      const device = deviceList[kind].find(
+        (device) => device.deviceId === deviceId
+      );
+
+      if (device) {
+        setDevice((prevDevice) => ({
+          ...prevDevice,
+          [kind]: device,
+        }));
+
+        if (kind === "audioinput") {
+          setActiveAudioInputDevice(device.deviceId);
+        }
+
+        if (kind === "videoinput") {
+          setActiveVideoInputDevice(device.deviceId);
+        }
+
+        if (kind === "audiooutput") {
+          setActiveAudioOutputDevice(device.deviceId);
+        }
+      }
+    },
+    [
+      deviceList,
+      setActiveAudioInputDevice,
+      setActiveAudioOutputDevice,
+      setActiveVideoInputDevice,
+    ]
+  );
+
+  useEffect(() => {
+    gotDevices();
+  }, [gotDevices]);
+
   return (
     <>
       <div className="aspect-video w-full h-auto mt-10 rounded overflow-hidden relative">
@@ -246,7 +354,7 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
         )}
       </div>
       <div className="my-5">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center flex-wrap w-auto gap-3">
           <ButtonToggle
             value={isStreaming}
             onClick={toggleStreaming}
@@ -259,6 +367,7 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
             value={isScreenSharing}
             onClick={toggleShareScreen}
             className="flex items-center gap-x-2"
+            hidden={!isStreaming}
           >
             {isScreenSharing ? <IconCamera /> : <IconCameraOff />}
             {isScreenSharing ? "Matikan Share Screen" : "Share Screen"}
@@ -283,15 +392,21 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
             value={isRecording.isRecording}
             onClick={handleRecording}
             className="flex items-center gap-x-2"
-            disabled={isRecording.isLoading}
+            disabled={isRecording.isLoading || !isStreaming}
+            hidden={!isStreaming}
           >
             {isRecording.isRecording ? <IconCircleStop /> : <IconRecord />}
             {isRecording.isRecording ? "Hentikan Rekam" : "Rekam Sesi"}
           </ButtonToggle>
+          <button
+            className="btn btn-sm text-white text-sm w-56 h-10"
+            onClick={() => setIsModalOpen(true)}
+          >
+            <IconGear />
+            <h1>Pengaturan</h1>
+          </button>
         </div>
       </div>
-
-      <MediaDeviceMenu />
 
       {isRecording.path && (
         <div className="flex items-center gap-2">
@@ -305,6 +420,16 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
             Download Rekaman
           </a>
         </div>
+      )}
+      {createPortal(
+        <StreamingOptions
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          device={device}
+          deviceList={deviceList}
+          handleDeviceChange={handleDeviceChange}
+        />,
+        document.body
       )}
     </>
   );

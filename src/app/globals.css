@@ -9,3 +9,12 @@
 .video__camera--full {
   transition: transform 0.5s, width 0.5s 0.5s !important;
 }
+
+/* Livekit Media Device Select */
+.lk-media-device-select [data-lk-active="true"] {
+  @apply bg-green-500 rounded-lg font-semibold;
+}
+
+.lk-media-device-select li button {
+  @apply text-left my-2 px-3 text-sm;
+}

@@ -18,6 +18,6 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("rippleui")],
+  plugins: [require("daisyui")],
 };
 export default config;
