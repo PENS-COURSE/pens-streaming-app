@@ -3,6 +3,7 @@ import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import clsx from "clsx";
 import { ToastContainer } from "react-toastify";
+import { NavbarProvider } from "../contexts/navbarContext";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -21,7 +22,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={clsx(poppins.className, "antialiased")}>{children}</body>
+      <body className={clsx(poppins.className, "antialiased")}>
+        <NavbarProvider>{children}</NavbarProvider>
+      </body>
     </html>
   );
 }

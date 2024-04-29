@@ -1,9 +1,11 @@
 import {
   RoomAudioRenderer,
+  TrackMutedIndicator,
   useConnectionState,
   useRemoteParticipant,
   useRemoteParticipants,
   useTracks,
+  useMediaDeviceSelect,
 } from "@livekit/components-react";
 import clsx from "clsx";
 import {
@@ -12,9 +14,34 @@ import {
   RoomEvent,
   ConnectionQuality,
 } from "livekit-client";
-import React, { useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import StreamingOptions from "./StreamingOptions";
+import { IconGear } from "@irsyadadl/paranoid";
 
 const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+  const {
+    devices: audioOutputDevices,
+    activeDeviceId: activeAudioOutputDeviceId,
+    setActiveMediaDevice: setActiveAudioOutputDevice,
+  } = useMediaDeviceSelect({
+    kind: "audiooutput",
+  });
+
+  const [deviceList, setDeviceList] = useState<
+    Record<"audiooutput", MediaDeviceInfo[]>
+  >({
+    audiooutput: [],
+  });
+
+  const [device, setDevice] = useState<
+    Record<"audiooutput", MediaDeviceInfo | null>
+  >({
+    audiooutput: null,
+  });
+
   const stateConnection = useConnectionState();
   const participants = useRemoteParticipants({
     updateOnlyOn: Object.values(RoomEvent),
@@ -61,6 +88,36 @@ const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
     () => participants?.isMicrophoneEnabled,
     [participants?.isMicrophoneEnabled]
   );
+
+  const gotDevices = useCallback(async () => {
+    setDeviceList({
+      audiooutput: audioOutputDevices,
+    });
+  }, [audioOutputDevices]);
+
+  const handleDeviceChange = useCallback(
+    async (
+      kind: "audioinput" | "audiooutput" | "videoinput",
+      deviceId: string
+    ) => {
+      const device = deviceList["audiooutput"].find(
+        (device) => device.deviceId === deviceId
+      );
+
+      if (device) {
+        setActiveAudioOutputDevice(device.deviceId);
+        setDevice((prevDevice) => ({
+          ...prevDevice,
+          [kind]: device,
+        }));
+      }
+    },
+    [deviceList, setActiveAudioOutputDevice]
+  );
+
+  useEffect(() => {
+    gotDevices();
+  }, [gotDevices]);
 
   if (
     stateConnection === ConnectionState.Connecting ||
@@ -137,9 +194,28 @@ const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
             ref={videoEl}
             autoPlay
           ></video>
-          <RoomAudioRenderer />
+          <RoomAudioRenderer muted={false} volume={100} />
         </div>
       </div>
+
+      <button
+        className="btn btn-sm text-white text-sm w-56 h-10 mt-5"
+        onClick={() => setIsModalOpen(true)}
+      >
+        <IconGear />
+        <h1>Pengaturan</h1>
+      </button>
+
+      {createPortal(
+        <StreamingOptions
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          device={device}
+          deviceList={deviceList}
+          handleDeviceChange={handleDeviceChange}
+        />,
+        document.body
+      )}
     </>
   );
 };

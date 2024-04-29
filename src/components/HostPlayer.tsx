@@ -8,7 +8,10 @@ import {
   IconMicOff,
   IconRecord,
 } from "@irsyadadl/paranoid";
-import { useLocalParticipant } from "@livekit/components-react";
+import {
+  useLocalParticipant,
+  useMediaDeviceSelect,
+} from "@livekit/components-react";
 import clsx from "clsx";
 import {
   createLocalAudioTrack,
@@ -53,6 +56,30 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
     audioinput: null,
     audiooutput: null,
     videoinput: null,
+  });
+
+  const {
+    devices: audioOutputDevices,
+    activeDeviceId: activeAudioOutputDeviceId,
+    setActiveMediaDevice: setActiveAudioOutputDevice,
+  } = useMediaDeviceSelect({
+    kind: "audiooutput",
+  });
+
+  const {
+    devices: audioInputDevices,
+    activeDeviceId: activeAudioInputDeviceId,
+    setActiveMediaDevice: setActiveAudioInputDevice,
+  } = useMediaDeviceSelect({
+    kind: "audioinput",
+  });
+
+  const {
+    devices: videoInputDevices,
+    activeDeviceId: activeVideoInputDeviceId,
+    setActiveMediaDevice: setActiveVideoInputDevice,
+  } = useMediaDeviceSelect({
+    kind: "videoinput",
   });
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -103,7 +130,7 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
       setVideoTrack(undefined);
     } else {
       const tracks = await createLocalVideoTrack({
-        deviceId: device.videoinput?.deviceId,
+        deviceId: activeVideoInputDeviceId,
       });
       setVideoTrack(tracks);
       if (isStreaming) {
@@ -122,7 +149,7 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
     isStreaming,
     localParticipant,
     videoTrack,
-    device.videoinput?.deviceId,
+    activeVideoInputDeviceId,
   ]);
 
   const toggleMicrophone = useCallback(async () => {
@@ -137,7 +164,7 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
         channelCount: 2,
         echoCancellation: false,
         noiseSuppression: false,
-        deviceId: device.audioinput?.deviceId,
+        deviceId: activeAudioInputDeviceId,
       });
       setAudioTrack(tracks);
 
@@ -153,7 +180,7 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
     isStreaming,
     localParticipant,
     audioTrack,
-    device.audioinput?.deviceId,
+    activeAudioInputDeviceId,
   ]);
 
   const toggleShareScreen = useCallback(async () => {
@@ -248,20 +275,12 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
   }, [isRecording, roomSlug]);
 
   const gotDevices = useCallback(async () => {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-
-    const audioinput = devices.filter((device) => device.kind === "audioinput");
-    const audiooutput = devices.filter(
-      (device) => device.kind === "audiooutput"
-    );
-    const videoinput = devices.filter((device) => device.kind === "videoinput");
-
     setDeviceList({
-      audioinput,
-      audiooutput,
-      videoinput,
+      audioinput: audioInputDevices,
+      audiooutput: audioOutputDevices,
+      videoinput: videoInputDevices,
     });
-  }, []);
+  }, [audioInputDevices, audioOutputDevices, videoInputDevices]);
 
   const handleDeviceChange = useCallback(
     async (
@@ -279,48 +298,24 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
         }));
 
         if (kind === "audioinput") {
-          if (audioTrack) {
-            audioTrack.stop();
-            if (isStreaming) {
-              void localParticipant?.unpublishTrack(audioTrack);
-            }
-            const tracks = await createLocalAudioTrack({
-              channelCount: 2,
-              echoCancellation: false,
-              noiseSuppression: false,
-              deviceId: device.deviceId,
-            });
-            setAudioTrack(tracks);
-
-            if (isStreaming) {
-              void localParticipant?.publishTrack(tracks);
-            }
-          }
+          setActiveAudioInputDevice(device.deviceId);
         }
 
         if (kind === "videoinput") {
-          if (videoTrack) {
-            videoTrack.stop();
-            if (isStreaming) {
-              void localParticipant?.unpublishTrack(videoTrack);
-            }
-            const tracks = await createLocalVideoTrack({
-              deviceId: device.deviceId,
-            });
-            setVideoTrack(tracks);
+          setActiveVideoInputDevice(device.deviceId);
+        }
 
-            if (isStreaming) {
-              void localParticipant?.publishTrack(tracks);
-            }
-
-            if (previewVideoEl.current) {
-              tracks.attach(previewVideoEl.current);
-            }
-          }
+        if (kind === "audiooutput") {
+          setActiveAudioOutputDevice(device.deviceId);
         }
       }
     },
-    [audioTrack, deviceList, isStreaming, localParticipant, videoTrack]
+    [
+      deviceList,
+      setActiveAudioInputDevice,
+      setActiveAudioOutputDevice,
+      setActiveVideoInputDevice,
+    ]
   );
 
   useEffect(() => {

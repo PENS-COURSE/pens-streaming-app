@@ -5,11 +5,13 @@ import React from "react";
 const TabItem = ({
   active,
   children,
+  hidden,
 }: {
   active: boolean;
+  hidden?: boolean;
   children: React.ReactNode;
 }) => {
-  return (
+  return hidden ? null : (
     <Tab
       className={clsx(
         "w-full text-left px-5 py-2 border-l-[3px]",
