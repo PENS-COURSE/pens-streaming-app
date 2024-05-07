@@ -123,7 +123,7 @@ const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
     stateConnection === ConnectionState.Connecting ||
     ConnectionState.Reconnecting
   ) {
-    <div className="aspect-video w-full h-auto mt-10 rounded overflow-hidden">
+    <div className="aspect-video w-full h-auto xl:max-h-[600px] mt-10 rounded overflow-hidden">
       <main className="bg-black flex items-center w-full h-full justify-center select-none">
         <svg className="spinner-ring" viewBox="25 25 50 50" strokeWidth="5">
           <circle cx="50" cy="50" r="20" />
@@ -138,7 +138,7 @@ const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
     participants.connectionQuality === ConnectionQuality.Unknown
   ) {
     return (
-      <div className="aspect-video w-full h-auto mt-10 rounded overflow-hidden">
+      <div className="aspect-video w-full h-auto xl:max-h-[600px] mt-10 rounded overflow-hidden">
         <main className="bg-black flex items-center w-full h-full justify-center select-none text-white">
           <h1 className="text-lg">Host Tidak Ada atau Sedang Offline</h1>
         </main>
@@ -148,7 +148,7 @@ const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
 
   if (isMicrophoneEnabled && !isCameraEnabled) {
     return (
-      <div className="aspect-video w-full h-auto mt-10 rounded overflow-hidden">
+      <div className="aspect-video w-full h-auto xl:max-h-[600px] mt-10 rounded overflow-hidden">
         <main className="bg-black flex items-center w-full h-full justify-center select-none text-white">
           <h1 className="text-lg">
             {participants?.identity} Sedang Aktifkan Microphone
@@ -160,7 +160,7 @@ const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
 
   if (!isShareScreen && !isCameraEnabled && !isMicrophoneEnabled) {
     return (
-      <div className="aspect-video w-full h-auto mt-10 rounded overflow-hidden">
+      <div className="aspect-video w-full h-auto xl:max-h-[600px] mt-10 rounded overflow-hidden">
         <main className="bg-black flex items-center w-full h-full justify-center select-none text-white">
           <h1 className="text-lg">
             Host Sedang Tidak Aktifkan Kamera atau Share Screen

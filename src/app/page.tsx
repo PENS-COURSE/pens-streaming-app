@@ -118,29 +118,28 @@ export default function Home() {
   }
 
   return (
-    <main className="bg-white">
+    <main className="bg-white lg:h-screen lg:relative">
       <Navbar />
       <LiveKitRoom
         token={streaming?.room_token}
         serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_SERVER_URL}
+        className="lg:absolute lg:top-44 xl:top-32"
       >
-        <section className="grid grid-cols-3 text-black mt-5 pb-16 container mx-auto">
-          <div className="col-span-2">
+        <section className="flex flex-col lg:flex-row gap-10 text-black mt-5 mx-10 md:mx-16 lg:mx-20 xl:mx-32">
+          <div className="w-full lg:w-2/3 xl:w-3/4 h-full ">
             {isRoomAdmin ? (
               <HostPlayer roomSlug={slug} />
             ) : (
               <ViewerPlayer moderator={moderator} />
             )}
             <div className="mt-6">
-              <h1 className="font-semibold text-2xl">Konsep Pemrograman</h1>
-              <p className="text-gray-600 mt-1">
-                Pada materi ini kamu akan mempelajari cara berpikir dan
-                menggambarkan suatu program dengan menggunakan CSS. Kamu akan
-                belajar konsep dasar CSS
+              <h1 className="font-semibold text-2xl">Dasar Desain Figma</h1>
+              <p className="text-gray-600 mt-1 text-justify text-xs sm:text-sm md:text-base">
+                Figma adalah sebuah aplikasi web kolaboratif untuk user
+                interface, dengan fitur-fitur luring tambahan yang tersedia pada
+                aplikasi desktop untuk Windows dan macOS.
               </p>
-            </div>
 
-            <div className="mt-6 w-max">
               <div className="flex items-center justify-between gap-x-6">
                 <p className="text-yellow-500 font-medium flex items-center">
                   <StarIcon className="w-4 h-4 text-yellow-500 mr-1" />
@@ -155,7 +154,7 @@ export default function Home() {
                 </p>
                 <p className="text-gray-500 flex items-center">
                   <ClockIcon className="w-5 h-5 text-gray-500 mr-2" />
-                  Pemula
+                  Beginner
                 </p>
               </div>
               <p className="text-gray-500 mt-2">
@@ -163,13 +162,13 @@ export default function Home() {
               </p>
             </div>
           </div>
-          <div className="w-3/4 h-full ms-auto">
+          <div className="w-full lg:w-1/3 xl:w-1/4">
             <ChatBox participantName={participantName} />
           </div>
         </section>
       </LiveKitRoom>
 
-      <Footer />
+      {/* <Footer /> */}
       <ToastContainer />
     </main>
   );

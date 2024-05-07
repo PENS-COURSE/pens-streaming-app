@@ -41,7 +41,7 @@ const ChatBox = ({ participantName }: { participantName: string }) => {
   return (
     <>
       <p className="font-medium text-center text-lg mb-4">Live Chat</p>
-      <div className="bg-gray-50 w-full h-3/4 rounded overflow-auto px-6 pb-6 mx-auto flex flex-col justify-end gap-y-3">
+      <div className="bg-gray-50 w-full h-96 lg:h-[450px] xl:h-[500px] 2xl:h-[550px] rounded overflow-auto px-6 pb-6 mx-auto flex flex-col justify-end gap-y-3">
         {reverseMessages.map((msg, idx) => (
           <ChatMessage
             key={idx}
@@ -55,11 +55,11 @@ const ChatBox = ({ participantName }: { participantName: string }) => {
           value={message}
           onChange={handleChangeMessage}
           onKeyDown={onEnter}
-          className="input input-bordered bg-transparent border-gray-300 mt-4 text-black w-full"
-          placeholder="Masukan pesan kamu disini ..."
+          className="input input-bordered bg-transparent border-gray-300 mt-4 text-black w-full placeholder:text-xs "
+          placeholder="Masukan pesan kamu disini"
         />
         <button onClick={onSend} disabled={message.trim().length === 0}>
-          <PaperAirplaneIcon className="inset-0 ms-auto absolute pointer-events-none text-gray-500 size-6 mr-2" />
+          <PaperAirplaneIcon className="inset-0 ms-auto absolute pointer-events-none text-gray-500 size-4 mr-2" />
         </button>
       </label>
     </>
