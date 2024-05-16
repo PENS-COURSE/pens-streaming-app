@@ -32,6 +32,7 @@ export default function Home() {
     () => roomSignature && roomSignature?.video.roomAdmin,
     [roomSignature]
   );
+  const [isDisconnected, setIsDisconnected] = useState<boolean>(false);
 
   const moderator = useMemo(() => streaming?.moderator, [streaming]);
   const slug = useMemo(() => roomSignature?.video.room, [roomSignature]);
@@ -115,6 +116,20 @@ export default function Home() {
         </Link>
       </main>
     );
+  } else if (isDisconnected) {
+    return (
+      <main className="bg-black flex flex-col items-center min-h-screen justify-center select-none">
+        <h1 className="text-2xl flex items-center gap-x-3">
+          Ruangan Telah Berakhir
+        </h1>
+        <Link
+          href="/"
+          className="mt-3 text-blue-400 hover:text-blue-600 transition-colors duration-300"
+        >
+          Kembali ke Beranda
+        </Link>
+      </main>
+    );
   }
 
   return (
@@ -124,6 +139,8 @@ export default function Home() {
         token={streaming?.room_token}
         serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_SERVER_URL}
         className="lg:absolute lg:top-44 xl:top-32"
+        onConnected={() => setIsDisconnected(false)}
+        onDisconnected={() => setIsDisconnected(true)}
       >
         <section className="flex flex-col lg:flex-row gap-10 text-black mt-5 mx-10 md:mx-16 lg:mx-20 xl:mx-32">
           <div className="w-full lg:w-2/3 xl:w-3/4 h-full ">
