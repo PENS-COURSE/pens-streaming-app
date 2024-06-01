@@ -10,7 +10,12 @@ const Navbar = () => {
       <div className="navbar bg-transparent shadow-none container mx-auto h-[88px]">
         <div className="navbar-start">
           <a className="navbar-item">
-            <Image src="/PENS.png" alt="logo" width="50" height="50" />
+            <Image
+              src="https://pens-api-staging.superrexy-dev.my.id/public/uploads/logos/logo.png"
+              alt="PENS COURSE"
+              width="50"
+              height="50"
+            />
           </a>
         </div>
 
