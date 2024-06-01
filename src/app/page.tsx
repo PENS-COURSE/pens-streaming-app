@@ -50,7 +50,7 @@ export default function Home() {
     return roomSignature?.video.room;
   }, [roomSignature]);
   const participantName = useMemo(() => {
-    return roomSignature?.surb;
+    return roomSignature?.sub;
   }, [roomSignature]);
 
   const token = useMemo(() => {
