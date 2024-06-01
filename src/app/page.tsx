@@ -3,7 +3,7 @@
 import { PaperAirplaneIcon, StarIcon } from "@heroicons/react/16/solid";
 import { ClockIcon } from "@heroicons/react/24/outline";
 import { useSearchParams } from "next/navigation";
-import { joinStreaming } from "../actions/streaming";
+import { getDetailStreaming, joinStreaming } from "../actions/streaming";
 import ChatMessage from "../components/ChatMessage";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
@@ -18,12 +18,14 @@ import ViewerPlayer from "../components/ViewerPlayer";
 import ChatBox from "../components/ChatBox";
 import HostPlayer from "../components/HostPlayer";
 import { NavbarContext } from "../contexts/navbarContext";
+import { DetailStreaming } from "../types/DetailStreaming";
 
 export default function Home() {
   // Context
   const { setIdentity } = useContext(NavbarContext);
   const [streaming, setStreaming] = useState<Streaming | null>(null);
   const [roomSignature, setRoomSignature] = useState<any | null>(null);
+  const [roomDetail, setRoomDetail] = useState<DetailStreaming | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isNotFound, setIsNotFound] = useState<boolean>(false);
   const [isForbidden, setIsForbidden] = useState<boolean>(false);
@@ -35,7 +37,18 @@ export default function Home() {
   const [isDisconnected, setIsDisconnected] = useState<boolean>(false);
 
   const moderator = useMemo(() => streaming?.moderator, [streaming]);
-  const slug = useMemo(() => roomSignature?.video.room, [roomSignature]);
+  const slug = useMemo(() => {
+    if (roomSignature?.video.room) {
+      getDetailStreaming({ slug: roomSignature?.video.room }).then((res) => {
+        setRoomDetail(res.data ?? null);
+        if (res.data?.title) {
+          document.title = `${res.data?.title} | PENS Online Classroom`;
+        }
+      });
+    }
+
+    return roomSignature?.video.room;
+  }, [roomSignature]);
   const participantName = useMemo(() => {
     return roomSignature?.surb;
   }, [roomSignature]);
@@ -58,6 +71,7 @@ export default function Home() {
         joinStreaming({ signed })
           .then((res) => {
             setStreaming(res.data ?? null);
+
             setRoomSignature(jwtDecode(res.data?.room_token ?? ""));
           })
           .catch((err) => {
@@ -173,28 +187,26 @@ export default function Home() {
               <ViewerPlayer moderator={moderator} />
             )}
             <div className="mt-6">
-              <h1 className="font-semibold text-2xl">Dasar Desain Figma</h1>
+              <h1 className="font-semibold text-2xl">
+                {roomDetail?.title ?? ""}
+              </h1>
               <p className="text-gray-600 mt-1 text-justify text-xs sm:text-sm md:text-base">
-                Figma adalah sebuah aplikasi web kolaboratif untuk user
-                interface, dengan fitur-fitur luring tambahan yang tersedia pada
-                aplikasi desktop untuk Windows dan macOS.
+                {roomDetail?.description ?? ""}
               </p>
 
               <div className="flex items-center justify-between gap-x-6">
-                <p className="text-yellow-500 font-medium flex items-center">
-                  <StarIcon className="w-4 h-4 text-yellow-500 mr-1" />
-                  4.3
-                  <span className="text-gray-300 text-sm ml-2">
-                    (12.000+ Ulasan)
-                  </span>
-                </p>
-                <p className="text-gray-500 flex items-center">
-                  <ClockIcon className="w-5 h-5 text-gray-500 mr-2" />2 Jam /
-                  Sesi
-                </p>
+                {roomDetail?.course?.ratings !== 0 && (
+                  <p className="text-yellow-500 font-medium flex items-center">
+                    <StarIcon className="w-4 h-4 text-yellow-500 mr-1" />
+                    {roomDetail?.course?.ratings ?? 0}
+                    <span className="text-gray-300 text-sm ml-2">
+                      ({roomDetail?.course?.total_user_rating}+ Ulasan)
+                    </span>
+                  </p>
+                )}
                 <p className="text-gray-500 flex items-center">
                   <ClockIcon className="w-5 h-5 text-gray-500 mr-2" />
-                  Beginner
+                  {roomDetail?.course?.grade_level ?? ""}
                 </p>
               </div>
               <p className="text-gray-500 mt-2">

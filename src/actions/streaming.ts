@@ -1,6 +1,7 @@
 // "use server";
 
 import { APIResponse } from "../types/APIResponse";
+import { DetailStreaming } from "../types/DetailStreaming";
 import { Streaming } from "../types/Streaming";
 
 export async function joinStreaming({
@@ -181,6 +182,36 @@ export async function getIsRecording({
     if (res.status >= 500) {
       throw new Error(
         JSON.stringify({ message: "Failed to record streaming", status: 500 })
+      );
+    } else {
+      throw new Error(JSON.stringify({ message: message, status: statusCode }));
+    }
+  }
+
+  return res.json();
+}
+
+export async function getDetailStreaming({
+  slug,
+}: {
+  slug: string;
+}): Promise<APIResponse<DetailStreaming>> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_PENS_STREAMING_API}/api/streaming/${slug}/detail`,
+    {
+      method: "GET",
+    }
+  );
+
+  if (!res.ok) {
+    const data = await res.text();
+    const { message, statusCode } = JSON.parse(data);
+    if (res.status >= 500) {
+      throw new Error(
+        JSON.stringify({
+          message: "Failed to start streaming, please contact Admin !",
+          status: 500,
+        })
       );
     } else {
       throw new Error(JSON.stringify({ message: message, status: statusCode }));
