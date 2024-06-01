@@ -93,14 +93,20 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
     if (isStreaming && localParticipant) {
       if (videoTrack) {
         void localParticipant.unpublishTrack(videoTrack);
+        setVideoTrack(undefined);
+        setIsCameraOn(false);
       }
       if (audioTrack) {
         void localParticipant.unpublishTrack(audioTrack);
+        setAudioTrack(undefined);
+        setIsMicrophoneOn(false);
       }
       if (screenTrack) {
         screenTrack.forEach((track) => {
           void localParticipant.unpublishTrack(track);
         });
+        setScreenTrack(undefined);
+        setIsScreenSharing(false);
       }
     } else {
       if (videoTrack) {

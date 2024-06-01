@@ -24,7 +24,6 @@ const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
 
   const {
     devices: audioOutputDevices,
-    activeDeviceId: activeAudioOutputDeviceId,
     setActiveMediaDevice: setActiveAudioOutputDevice,
   } = useMediaDeviceSelect({
     kind: "audiooutput",
@@ -45,7 +44,9 @@ const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
   const stateConnection = useConnectionState();
   const participants = useRemoteParticipants({
     updateOnlyOn: Object.values(RoomEvent),
-  }).filter((p) => p.permissions?.canPublishSources)[0];
+  }).find((p) => p.identity === moderator);
+
+  console.log(participants);
 
   const videoEl = React.useRef<HTMLVideoElement>(null);
   const shareScreenEl = React.useRef<HTMLVideoElement>(null);
