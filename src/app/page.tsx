@@ -27,16 +27,26 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isNotFound, setIsNotFound] = useState<boolean>(false);
   const [isForbidden, setIsForbidden] = useState<boolean>(false);
-  const [room, setRoom] = useState();
   const isRoomAdmin = useMemo(
     () => roomSignature && roomSignature?.video.roomAdmin,
     [roomSignature]
   );
+
   const [isDisconnected, setIsDisconnected] = useState<boolean>(false);
 
   const moderator = useMemo(() => streaming?.moderator, [streaming]);
   const slug = useMemo(() => roomSignature?.video.room, [roomSignature]);
-  const participantName = useMemo(() => roomSignature?.sub, [roomSignature]);
+  const participantName = useMemo(() => {
+    return roomSignature?.surb;
+  }, [roomSignature]);
+
+  const token = useMemo(() => {
+    if (roomSignature) {
+      return JSON.parse(roomSignature.metadata)?.token;
+    } else {
+      return null;
+    }
+  }, [roomSignature]);
 
   const searchParams = useSearchParams();
 
@@ -47,10 +57,8 @@ export default function Home() {
       if (!roomSignature) {
         joinStreaming({ signed })
           .then((res) => {
-            console.log("OK");
             setStreaming(res.data ?? null);
             setRoomSignature(jwtDecode(res.data?.room_token ?? ""));
-            setIdentity(jwtDecode(res.data?.room_token ?? "").sub ?? "Guest");
           })
           .catch((err) => {
             const { message, status } = JSON.parse(err.message);
@@ -95,7 +103,12 @@ export default function Home() {
           Streaming Tidak Ditemukan
         </h1>
         <Link
-          href="/"
+          href={
+            slug
+              ? `https://penscourse.vercel.app/course/${slug}`
+              : `https://penscourse.vercel.app/`
+          }
+          passHref={true}
           className="mt-3 text-blue-400 hover:text-blue-600 transition-colors duration-300"
         >
           Kembali ke Beranda
@@ -109,7 +122,12 @@ export default function Home() {
           URL Telah Kadaluarsa
         </h1>
         <Link
-          href="/"
+          href={
+            slug
+              ? `https://penscourse.vercel.app/course/${slug}`
+              : `https://penscourse.vercel.app/`
+          }
+          passHref={true}
           className="mt-3 text-blue-400 hover:text-blue-600 transition-colors duration-300"
         >
           Kembali ke Beranda
@@ -123,7 +141,12 @@ export default function Home() {
           Ruangan Telah Berakhir
         </h1>
         <Link
-          href="/"
+          href={
+            slug
+              ? `https://penscourse.vercel.app/course/${slug}`
+              : `https://penscourse.vercel.app/`
+          }
+          passHref={true}
           className="mt-3 text-blue-400 hover:text-blue-600 transition-colors duration-300"
         >
           Kembali ke Beranda
@@ -145,7 +168,7 @@ export default function Home() {
         <section className="flex flex-col lg:flex-row gap-10 text-black mt-5 mx-10 md:mx-16 lg:mx-20 xl:mx-32">
           <div className="w-full lg:w-2/3 xl:w-3/4 h-full ">
             {isRoomAdmin ? (
-              <HostPlayer roomSlug={slug} />
+              <HostPlayer roomSlug={slug} token={token} />
             ) : (
               <ViewerPlayer moderator={moderator} />
             )}

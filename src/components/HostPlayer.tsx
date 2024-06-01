@@ -9,8 +9,10 @@ import {
   IconRecord,
 } from "@irsyadadl/paranoid";
 import {
+  useDataChannel,
   useLocalParticipant,
   useMediaDeviceSelect,
+  useParticipantInfo,
 } from "@livekit/components-react";
 import clsx from "clsx";
 import {
@@ -19,16 +21,26 @@ import {
   LocalTrack,
   Track,
 } from "livekit-client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   startRecordStreaming,
+  startStreaming,
   stopRecordStreaming,
+  stopStreaming,
 } from "../actions/streaming";
 import ButtonToggle from "./ButtonToggle";
 import StreamingOptions from "./StreamingOptions";
+import Modal from "./Modal";
 
-const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
+const HostPlayer = ({
+  roomSlug,
+  token,
+}: {
+  roomSlug: string;
+  token: string;
+}) => {
+  const [alertOpen, setAlertOpen] = useState<boolean>(false);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [videoTrack, setVideoTrack] = useState<LocalTrack>();
   const [audioTrack, setAudioTrack] = useState<LocalTrack>();
@@ -60,7 +72,6 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
 
   const {
     devices: audioOutputDevices,
-    activeDeviceId: activeAudioOutputDeviceId,
     setActiveMediaDevice: setActiveAudioOutputDevice,
   } = useMediaDeviceSelect({
     kind: "audiooutput",
@@ -89,7 +100,7 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
   const previewVideoEl = useRef<HTMLVideoElement>(null);
   const shareScreenEl = useRef<HTMLVideoElement>(null);
 
-  const toggleStreaming = useCallback(() => {
+  const toggleStreaming = useCallback(async () => {
     if (isStreaming && localParticipant) {
       if (videoTrack) {
         void localParticipant.unpublishTrack(videoTrack);
@@ -108,6 +119,11 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
         setScreenTrack(undefined);
         setIsScreenSharing(false);
       }
+
+      await stopStreaming({
+        slug: roomSlug,
+        token,
+      });
     } else {
       if (videoTrack) {
         void localParticipant?.publishTrack(videoTrack);
@@ -122,10 +138,23 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
           void localParticipant?.publishTrack(track);
         });
       }
+
+      await startStreaming({
+        slug: roomSlug,
+        token,
+      });
     }
 
     setIsStreaming(!isStreaming);
-  }, [isStreaming, localParticipant, videoTrack, audioTrack, screenTrack]);
+  }, [
+    isStreaming,
+    localParticipant,
+    videoTrack,
+    audioTrack,
+    screenTrack,
+    roomSlug,
+    token,
+  ]);
 
   const toggleCamera = useCallback(async () => {
     if (isCameraOn) {
@@ -360,7 +389,7 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
         <div className="flex items-center flex-wrap w-auto gap-3">
           <ButtonToggle
             value={isStreaming}
-            onClick={toggleStreaming}
+            onClick={() => setAlertOpen(true)}
             className="flex items-center gap-x-2"
           >
             {isStreaming ? <IconCircleStop /> : <IconCirclePlay />}
@@ -424,6 +453,25 @@ const HostPlayer = ({ roomSlug }: { roomSlug: string }) => {
           </a>
         </div>
       )}
+      {createPortal(
+        <Modal
+          open={alertOpen}
+          onClose={() => {
+            setAlertOpen(false);
+          }}
+          title={isStreaming ? "Hentikan Streaming" : "Mulai Streaming"}
+          description={
+            isStreaming
+              ? "Apakah Anda yakin ingin menghentikan streaming ini? Tindakan ini tidak dapat diurungkan."
+              : "Apakah anda yakin ingin memulai streaming ? Anda akan menjadi host streaming, pastikan anda sudah menyiapkan segala kebutuhan yang diperlukan sebelum memulai streaming. Apakah anda yakin ingin melanjutkan?"
+          }
+          confirmText={isStreaming ? "Ya, Hentikan" : "Mulai"}
+          cancelText="Batal"
+          onConfirm={() => toggleStreaming()}
+        />,
+        document.body
+      )}
+
       {createPortal(
         <StreamingOptions
           open={isModalOpen}

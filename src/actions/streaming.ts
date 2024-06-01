@@ -30,6 +30,76 @@ export async function joinStreaming({
   return res.json();
 }
 
+export async function startStreaming({
+  slug,
+  token,
+}: {
+  slug: string;
+  token: string;
+}): Promise<APIResponse<Streaming>> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_PENS_STREAMING_API}/api/streaming/${slug}/open-room`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: token,
+      },
+    }
+  );
+
+  if (!res.ok) {
+    const data = await res.text();
+    const { message, statusCode } = JSON.parse(data);
+    if (res.status >= 500) {
+      throw new Error(
+        JSON.stringify({
+          message: "Failed to start streaming, please contact Admin !",
+          status: 500,
+        })
+      );
+    } else {
+      throw new Error(JSON.stringify({ message: message, status: statusCode }));
+    }
+  }
+
+  return res.json();
+}
+
+export async function stopStreaming({
+  slug,
+  token,
+}: {
+  slug: string;
+  token: string;
+}): Promise<APIResponse<Streaming>> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_PENS_STREAMING_API}/api/streaming/${slug}/close-room`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: token,
+      },
+    }
+  );
+
+  if (!res.ok) {
+    const data = await res.text();
+    const { message, statusCode } = JSON.parse(data);
+    if (res.status >= 500) {
+      throw new Error(
+        JSON.stringify({
+          message: "Failed to start streaming, please contact Admin !",
+          status: 500,
+        })
+      );
+    } else {
+      throw new Error(JSON.stringify({ message: message, status: statusCode }));
+    }
+  }
+
+  return res.json();
+}
+
 export async function startRecordStreaming({
   slug,
 }: {
