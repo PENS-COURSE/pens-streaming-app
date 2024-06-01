@@ -71,7 +71,7 @@ export default function Home() {
         joinStreaming({ signed })
           .then((res) => {
             setStreaming(res.data ?? null);
-
+            setIdentity(jwtDecode(res.data?.room_token ?? "").sub ?? "Guest");
             setRoomSignature(jwtDecode(res.data?.room_token ?? ""));
           })
           .catch((err) => {
