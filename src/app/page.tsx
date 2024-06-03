@@ -170,17 +170,17 @@ export default function Home() {
   }
 
   return (
-    <main className="bg-white lg:h-screen lg:relative">
+    <main className="bg-white ">
       <Navbar />
       <LiveKitRoom
         token={streaming?.room_token}
         serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_SERVER_URL}
-        className="lg:absolute lg:top-44 xl:top-32"
+        className="lg:top-44 xl:top-32"
         onConnected={() => setIsDisconnected(false)}
         onDisconnected={() => setIsDisconnected(true)}
       >
-        <section className="flex flex-col lg:flex-row gap-10 text-black mt-5 mx-10 md:mx-16 lg:mx-20 xl:mx-32">
-          <div className="w-full lg:w-2/3 xl:w-3/4 h-full ">
+        <section className="w-full flex flex-col lg:flex-row gap-10 text-black mt-5 pb-10 px-10 md:px-16 lg:px-20 xl:px-32">
+          <div className="lg:w-2/3 xl:w-3/4 h-full ">
             {isRoomAdmin ? (
               <HostPlayer roomSlug={slug} token={token} />
             ) : (
@@ -214,7 +214,7 @@ export default function Home() {
               </p>
             </div>
           </div>
-          <div className="w-full lg:w-1/3 xl:w-1/4">
+          <div className="lg:w-1/3 xl:w-1/4">
             <ChatBox participantName={participantName} />
           </div>
         </section>

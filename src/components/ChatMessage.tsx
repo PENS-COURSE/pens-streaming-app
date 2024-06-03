@@ -19,7 +19,7 @@ const ChatMessage = ({
       </div>
       <div
         className={clsx(
-          "min-w-60 w-max p-2 rounded-lg",
+          "w-60 p-2 rounded-lg",
           isSender ? "bg-blue-300" : "bg-gray-300"
         )}
       >
@@ -29,7 +29,12 @@ const ChatMessage = ({
           </p>
           <p className={clsx(isSender && "text-blue-700")}>09:40</p>
         </div>
-        <div className={clsx("mt-2 text-justify", isSender && "text-blue-700")}>
+        <div
+          className={clsx(
+            "mt-2 text-justify break-words",
+            isSender && "text-blue-700"
+          )}
+        >
           {message.message}
         </div>
       </div>

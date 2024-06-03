@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="bg-white">
       <body className={clsx(poppins.className, "antialiased")}>
         <NavbarProvider>{children}</NavbarProvider>
       </body>

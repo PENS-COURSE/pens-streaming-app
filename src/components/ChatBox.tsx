@@ -41,7 +41,7 @@ const ChatBox = ({ participantName }: { participantName: string }) => {
   return (
     <>
       <p className="font-medium text-center text-lg mb-4">Live Chat</p>
-      <div className="bg-gray-50 w-full h-96 lg:h-[450px] xl:h-[500px] 2xl:h-[550px] rounded overflow-auto px-6 pb-6 mx-auto flex flex-col justify-end gap-y-3">
+      <div className="bg-gray-50 w-full h-96 lg:h-[450px] xl:h-[500px] 2xl:h-[550px] rounded-md overflow-y-auto px-6 py-6 mx-auto flex flex-col gap-y-3">
         {reverseMessages.map((msg, idx) => (
           <ChatMessage
             key={idx}
