@@ -19,15 +19,23 @@ const ChatMessage = ({
       </div>
       <div
         className={clsx(
-          "w-60 p-2 rounded-lg",
+          "w-64 p-2 rounded-lg",
           isSender ? "bg-blue-300" : "bg-gray-300"
         )}
       >
         <div className="flex items-center justify-between text-sm">
-          <p className={clsx("font-medium", isSender && "text-blue-800")}>
+          <p
+            className={clsx(
+              "font-medium w-1/2",
+              isSender && "text-blue-800",
+              "truncate"
+            )}
+          >
             {isSender ? "Kamu" : message?.from?.identity}
           </p>
-          <p className={clsx(isSender && "text-blue-700")}>09:40</p>
+          <p className={clsx(isSender && "text-blue-700")}>
+            {new Date(message?.timestamp).toLocaleTimeString()}
+          </p>
         </div>
         <div
           className={clsx(

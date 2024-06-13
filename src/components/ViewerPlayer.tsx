@@ -46,8 +46,6 @@ const ViewerPlayer = ({ moderator }: { moderator: string | undefined }) => {
     updateOnlyOn: Object.values(RoomEvent),
   }).find((p) => p.identity === moderator);
 
-  console.log(participants);
-
   const videoEl = React.useRef<HTMLVideoElement>(null);
   const shareScreenEl = React.useRef<HTMLVideoElement>(null);
 

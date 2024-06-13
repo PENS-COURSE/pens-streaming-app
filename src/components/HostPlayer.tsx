@@ -425,7 +425,7 @@ const HostPlayer = ({
             onClick={handleRecording}
             className="flex items-center gap-x-2"
             disabled={isRecording.isLoading || !isStreaming}
-            hidden={!isStreaming}
+            hidden={true}
           >
             {isRecording.isRecording ? <IconCircleStop /> : <IconRecord />}
             {isRecording.isRecording ? "Hentikan Rekam" : "Rekam Sesi"}
